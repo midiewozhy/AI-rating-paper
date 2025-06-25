@@ -1,10 +1,17 @@
 import json
 import time
+from datetime import datetime, timedelta
 
 import lark_oapi as lark
 import requests
 from lark_oapi.api.bitable.v1 import *
 from lark_oapi.api.docs.v1 import *
+
+from bs4 import BeautifulSoup
+import re
+
+import arxiv
+from datetime import datetime, timedelta
 
 
 def get_access_token(app_id, app_secret):
@@ -133,7 +140,7 @@ def get_rating_prompt(sop_content: str, tag_content: str, paper_content: str, is
 
 # SDK 使用说明: https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/server-side-sdk/python--sdk/preparations-before-development
 # 以下示例代码默认根据文档示例值填充，如果存在代码问题，请在 API 调试台填上相关必要参数后再复制代码使用
-def add_records(
+def add_records_to_dowei(
     table_app_token: str,
     table_id: str,
     user_access_token: str,
@@ -182,11 +189,96 @@ def add_records(
     # 处理业务结果
     lark.logger.info(lark.JSON.marshal(response.data, indent=4))
 
+def get_feishu_sheet_content(doc_token: str, sheet_id: str, range: str, access_token: str) -> list[list[any]]:
+    """
+    通过飞书开放平台 API 获取电子表格的内容
+    Reference: https://open.larkoffice.com/document/server-docs/docs/sheets-v3/data-operation/reading-a-single-range
+    
+    Args:
+        doc_token: 电子表格的 token
+        sheet_id: 工作表 ID
+        range: 单元格范围，如 "A1:B2"
+        access_token: 访问令牌
+    
+    Returns:
+        表格内容，格式为嵌套列表，例如 [[1, "a"], [2, "b"]]
+    """
+    # 构建请求 URL
+    url = f"https://open.feishu.cn/open-apis/sheets/v2/spreadsheets/{doc_token}/values/{sheet_id}!{range}"
+    
+    # 设置请求头
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+    
+    try:
+        # 发送 GET 请求
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # 检查请求是否成功
+        
+        # 解析 JSON 响应
+        data = response.json()
+        
+        # 提取 values 部分
+        values = data.get("data", {}).get("valueRange", {}).get("values", [])
+        return values
+    
+    except requests.exceptions.RequestException as e:
+        print(f"请求出错: {e}")
+        return []
+    except (KeyError, ValueError) as e:
+        print(f"解析响应出错: {e}")
+        return []
 
-import requests
-from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
-import re
+def add_records_to_feishu_sheet(spreadsheet_token, sheet_id, range, user_access_token, results):
+    """
+    向飞书表格指定范围写入数据
+    
+    Args:
+        spreadsheet_token: 电子表格的 token
+        sheet_id: 工作表 ID
+        range: 写入范围（如 "A1:B5"）
+        results: 要写入的数据（二维列表，如 [[1, "a"], [2, "b"]]）
+    
+    Returns:
+        dict: API 响应结果，包含操作状态和相关数据
+    """
+    # 飞书 API 基础配置
+    base_url = "https://open.feishu.cn/open-apis/sheets/v2/spreadsheets"
+    access_token = user_access_token # 需替换为实际令牌
+    
+    # 构建请求 URL（包含完整范围）
+    url = f"{base_url}/{spreadsheet_token}/values"
+    
+    # 设置请求头
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+    
+    # 构建请求体
+    payload = {
+        "valueRange": {
+            "range": f"{sheet_id}!{range}",
+            "values": results
+        }
+    }
+    
+    try:
+        # 发送 PUT 请求
+        response = requests.put(url, headers=headers, data=json.dumps(payload))
+        response.raise_for_status()  # 检查请求是否成功
+        
+        # 返回 API 响应
+        return response.json()
+    
+    except requests.exceptions.RequestException as e:
+        print(f"请求发送失败: {e}")
+        return {"error": str(e)}
+    except json.JSONDecodeError as e:
+        print(f"响应解析失败: {e}")
+        return {"error": f"响应解析失败: {response.text}"}
+
 
 # 清理链接（去除锚点和查询参数）
 def clean_link(link):
@@ -264,8 +356,7 @@ def get_huggingface_daily_papers_arxiv_links(date_str=None) -> list[str]:
 #    if links:
 #       print(f"前3个链接示例：\n{links}")
 
-import arxiv
-from datetime import datetime, timedelta
+
 
 def get_arxiv_paper_links(date_str: str = None) -> list[str]:
     """

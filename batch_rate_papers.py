@@ -27,7 +27,8 @@ from constants import (
     TABLE_ID,
 )
 from utils import (
-    add_records,
+    add_records_to_dowei,
+    add_records_to_feishu_sheet,
     get_access_token,
     get_feishu_doc_content,
     get_rating_prompt,
@@ -163,7 +164,7 @@ def rate_papers(sop_content: str, tag_content: str, paper_links: List[str] = Non
     return results
 
 
-def save_to_feishu(results: List[Dict[str, Any]]) -> None:
+def save_to_feishu_duowei(results: List[Dict[str, Any]]) -> None:
     """将评分结果保存到飞书多维表格
 
     Args:
@@ -172,8 +173,25 @@ def save_to_feishu(results: List[Dict[str, Any]]) -> None:
     # 获取访问令牌
     user_access_token = get_access_token(APP_ID, APP_SECRET)["access_token"]
 
-    # 将结果保存到飞书
-    add_records(TABLE_APP_TOKEN, TABLE_ID, user_access_token, results)
+    # 将结果保存到飞书多维表格
+    add_records_to_dowei(TABLE_APP_TOKEN, TABLE_ID, user_access_token, results)
+
+def save_to_feishu_sheet(spreadsheet_token, sheet_id, range, results: list[list[any]]) -> None:
+    """将所需要的结果保存到飞书电子表格
+
+    Args:
+        spreadsheet_token: 表格token
+        sheet_id: 工作表id
+        range: 添加数据的范围，如A1:B2
+        results (List[Dict[str, Any]]): 评分结果列表
+    """
+    # 获取访问令牌
+    user_access_token = get_access_token(APP_ID,APP_SECRET)["access_token"]
+
+    # 将结果保存到飞书电子表格
+    add_records_to_feishu_sheet(spreadsheet_token, sheet_id, range, user_access_token, results)
+
+
 
 
 def main():
@@ -222,7 +240,7 @@ def main():
         json.dump(results, f, indent=4, ensure_ascii=False)
 
     # 保存结果到飞书
-    save_to_feishu(results)
+    save_to_feishu_duowei(results)
 
 
 if __name__ == "__main__":
