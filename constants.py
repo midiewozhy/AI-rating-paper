@@ -6,9 +6,12 @@ JOB_TAG_DOC_TOKEN = "A2gHdk98No36a9xIyRqcORGCnxh"
 BOT_ID = "bot-20250611193357-46rqp"
 ARK_API_KEY = "ae126f0e-61bd-408e-b027-fc8cc536eb3c"
 
-
+#多维表格的
 TABLE_APP_TOKEN = "IFFJbfKixaVjiOsGK08cNv9xnye"
 TABLE_ID = "tbl59A6AKiOlxCav"
 
-
-
+#电子表格的
+SHEET_TOKEN = "SCmtscuAch23u5tHfYLc9BxtnId"
+SHEET_ID = "d40f7b"
+READ_RANGE = "A1:A2"
+WRITE_RANGE = "B1:H2"

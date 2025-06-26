@@ -25,12 +25,17 @@ from constants import (
     JOB_TAG_DOC_TOKEN,
     TABLE_APP_TOKEN,
     TABLE_ID,
+    SHEET_TOKEN,
+    SHEET_ID,
+    READ_RANGE,
+    WRITE_RANGE,
 )
 from utils import (
     add_records_to_dowei,
     add_records_to_feishu_sheet,
     get_access_token,
     get_feishu_doc_content,
+    get_feishu_sheet_content,
     get_rating_prompt,
     get_huggingface_daily_papers_arxiv_links,
     get_arxiv_paper_links,
@@ -90,7 +95,9 @@ def rate_papers(sop_content: str, tag_content: str, paper_links: List[str] = Non
 
     Args:
         paper_links (List[str]): 论文链接列表
-        sop_content (str): 评分标准内容
+        sop_content (str): 评分标准内容链接
+        tag_content (str): 岗位tag内容链接
+        pdf_content (str): HR单独投入的文章内容
 
     Returns:
         List[Dict[str, Any]]: 评分结果列表
@@ -108,7 +115,7 @@ def rate_papers(sop_content: str, tag_content: str, paper_links: List[str] = Non
         for link in paper_links:
             # 构造评分提示
             messages = get_rating_prompt(sop_content, tag_content, link, is_pdf = False)
-
+            print(messages)
             lark.logger.info(f"messages: {messages}")
             # 调用 AI 进行评分
             completion = client.chat.completions.create(
@@ -227,7 +234,7 @@ def main():
     #paper_content = extract_pdf_content("file:///C:/Users/Admin/Desktop/papers/nature14539.pdf")
 
     paper_links = get_arxiv_paper_links()[0:1]
-    print(paper_links)
+
 
     # 获取评分标准
     access_token = get_access_token(APP_ID, APP_SECRET)["access_token"]
