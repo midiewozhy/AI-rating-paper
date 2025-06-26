@@ -1,15 +1,15 @@
 [
     {
-        "score": 79,
-        "summary": "论文提出了jina-embeddings-v4，一个3.8B参数的多模态嵌入模型，基于Qwen2.5-VL backbone，支持单向量（2048维，可截断至128维）和多向量（128维/ token）输出，结合LoRA适配器优化特定任务（检索、语义相似性、代码检索）。核心贡献包括：1）统一的多模态架构，通过共享编码器减少模态 gap；2）支持单/多向量输出，提升检索性能（多向量在Jina-VDR基准上优于单向量）；3）提出Jina-VDR benchmark，覆盖多语言、多领域的视觉丰富文档检索任务（如图表、流程图、地图等）。实验表明，模型在MTEB、MMTEB、ViDoRe等基准上取得SOTA性能，特别是在视觉丰富文档检索上优于colpali、dse-qwen2等现有模型，代码检索任务上也达到 competitive 水平。",
-        "tag_primary": "LLM-Model",
-        "contact_tag_primary": "周珣",
-        "tag_secondary": "LLM-Code",
-        "contact_tag_secondary": "沈开",
+        "score": 57,
+        "summary": "论文利用认知模型（如Rational Speech Acts模型）系统分析了大语言模型（LLMs）中的价值权衡问题，通过闭源模型（不同推理努力程度）和开源模型（不同基线、反馈数据集、对齐方法）的实验，发现推理模型更重视信息效用（informational utility），而基线模型和预训练数据对价值权衡的影响大于反馈数据集和对齐方法。研究结果为理解LLM的价值权衡提供了认知科学的视角，对优化LLM的对齐策略有参考价值。",
+        "tag_primary": "LLM-Posttrain",
+        "contact_tag_primary": "严林",
+        "tag_secondary": "LLM-Horizon Reach",
+        "contact_tag_secondary": "王明轩、Jiecao Chen、李铮",
         "是否有华人": "是",
         "link": {
-            "link": "http://arxiv.org/pdf/2506.18902v1",
-            "text": "http://arxiv.org/pdf/2506.18902v1"
+            "link": "http://arxiv.org/pdf/2506.20666v1",
+            "text": "http://arxiv.org/pdf/2506.20666v1"
         }
     }
 ]
