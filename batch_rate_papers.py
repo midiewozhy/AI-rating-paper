@@ -233,7 +233,7 @@ def main():
 
     #paper_content = extract_pdf_content("file:///C:/Users/Admin/Desktop/papers/nature14539.pdf")
 
-    paper_links = get_arxiv_paper_links()[0:1]
+    paper_links = get_arxiv_paper_links()[0:2]
 
 
     # 获取评分标准
@@ -252,3 +252,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
