@@ -10,6 +10,7 @@ ARK_API_KEY = "ae126f0e-61bd-408e-b027-fc8cc536eb3c"
 #多维表格的
 TABLE_APP_TOKEN = "IFFJbfKixaVjiOsGK08cNv9xnye"
 TABLE_ID = "tbl59A6AKiOlxCav"
+TEST_TABLE_ID = "tbl59A6AKiOlxCav"
 
 #电子表格的
 SHEET_TOKEN = "SCmtscuAch23u5tHfYLc9BxtnId"
