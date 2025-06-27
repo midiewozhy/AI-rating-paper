@@ -189,7 +189,7 @@ def add_records_to_dowei(
     # 处理业务结果
     lark.logger.info(lark.JSON.marshal(response.data, indent=4))
 
-def get_feishu_sheet_content(doc_token: str, sheet_id: str, range: str, access_token: str) -> list[list[any]]:
+def get_feishu_sheet_content(doc_token: str, sheet_id: str, range: str, access_token: str) -> list[str]:
     """
     通过飞书开放平台 API 获取电子表格的内容
     Reference: https://open.larkoffice.com/document/server-docs/docs/sheets-v3/data-operation/reading-a-single-range
@@ -201,7 +201,7 @@ def get_feishu_sheet_content(doc_token: str, sheet_id: str, range: str, access_t
         access_token: 访问令牌
     
     Returns:
-        表格内容，格式为嵌套列表，例如 [[1, "a"], [2, "b"]]
+        表格内容，格式为列表，例如 [1,2,3]
     """
     # 构建请求 URL
     url = f"https://open.feishu.cn/open-apis/sheets/v2/spreadsheets/{doc_token}/values/{sheet_id}!{range}"

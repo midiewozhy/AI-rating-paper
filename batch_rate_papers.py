@@ -39,6 +39,7 @@ from utils import (
     get_rating_prompt,
     get_huggingface_daily_papers_arxiv_links,
     get_arxiv_paper_links,
+    get_feishu_sheet_content,
 )
 
 def extract_pdf_content(pdf_url: str) -> str:
@@ -190,13 +191,28 @@ def save_to_feishu_sheet(spreadsheet_token, sheet_id, range, results: list[list[
         spreadsheet_token: 表格token
         sheet_id: 工作表id
         range: 添加数据的范围，如A1:B2
-        results (List[Dict[str, Any]]): 评分结果列表
+        results (List[List[Any]]): 评分结果列表
     """
     # 获取访问令牌
     user_access_token = get_access_token(APP_ID,APP_SECRET)["access_token"]
 
+    # 处理results格式问题
+    cleaned_results = [
+        [
+            result['score'],
+            result['summary'],
+            result['tag_primary'],
+            result['contact_tag_primary'],
+            result['tag_secondary'],
+            result['contact_tag_secondary'],
+            result['是否有华人']
+        ]
+        for result in results
+    ]
+
+
     # 将结果保存到飞书电子表格
-    add_records_to_feishu_sheet(spreadsheet_token, sheet_id, range, user_access_token, results)
+    add_records_to_feishu_sheet(spreadsheet_token, sheet_id, range, user_access_token, cleaned_results)
 
 
 
@@ -233,7 +249,9 @@ def main():
 
     #paper_content = extract_pdf_content("file:///C:/Users/Admin/Desktop/papers/nature14539.pdf")
 
-    paper_links = get_arxiv_paper_links()[0:2]
+    #paper_links = get_arxiv_paper_links()[0:2]
+
+
 
 
     # 获取评分标准
@@ -241,13 +259,17 @@ def main():
     sop_content = get_feishu_doc_content(RATING_SOP_DOC_TOKEN, access_token)
     tag_content = get_feishu_doc_content(JOB_TAG_DOC_TOKEN, access_token)
 
+    paper_links = get_feishu_sheet_content(SHEET_TOKEN,SHEET_ID,READ_RANGE,access_token)
+    paper_links = [",".join(map(str, row)) for row in paper_links]
+
     # 对论文进行评分
     results = rate_papers(sop_content, tag_content, paper_links = paper_links)
     with open("results.json", "w", encoding='utf-8', errors='ignore') as f:
         json.dump(results, f, indent=4, ensure_ascii=False)
 
     # 保存结果到飞书
-    save_to_feishu_duowei(results)
+    #save_to_feishu_duowei(results)
+    save_to_feishu_sheet(SHEET_TOKEN,SHEET_ID,WRITE_RANGE,results)
 
 
 if __name__ == "__main__":
