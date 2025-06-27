@@ -11,6 +11,7 @@ ARK_API_KEY = "ae126f0e-61bd-408e-b027-fc8cc536eb3c"
 TABLE_APP_TOKEN = "IFFJbfKixaVjiOsGK08cNv9xnye"
 TABLE_ID = "tbl59A6AKiOlxCav"
 TEST_TABLE_ID = "tbl59A6AKiOlxCav"
+TEST_VIEW_ID = "vewckRlD5j"
 
 #电子表格的
 SHEET_TOKEN = "SCmtscuAch23u5tHfYLc9BxtnId"
