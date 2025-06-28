@@ -91,7 +91,7 @@ def extract_pdf_content(pdf_url: str) -> str:
         return ""
 
 
-def rate_papers(sop_content: str, tag_content: str, paper_links: List[str] = None, pdf_content: str = None) -> List[Dict[str, Any]]:
+def rate_papers(sop_content: str, tag_content: str, date_str: str, paper_links: List[str] = None, pdf_content: str = None) -> List[Dict[str, Any]]:
     """对论文列表进行评分
 
     Args:
@@ -115,8 +115,7 @@ def rate_papers(sop_content: str, tag_content: str, paper_links: List[str] = Non
     if paper_links:
         for link in paper_links:
             # 构造评分提示
-            messages = get_rating_prompt(sop_content, tag_content, link, is_pdf = False)
-            print(messages)
+            messages = get_rating_prompt(sop_content, tag_content, link, False)
             lark.logger.info(f"messages: {messages}")
             # 调用 AI 进行评分
             completion = client.chat.completions.create(
@@ -127,25 +126,24 @@ def rate_papers(sop_content: str, tag_content: str, paper_links: List[str] = Non
             # 解析评分结果
             ai_ret = completion.choices[0].message.content.strip()
             lark.logger.info(f"ai_ret: {ai_ret}")
-            #print("ai_ret内容:", ai_ret)
             ai_ret = re.sub(r'^<\|FunctionCallEnd\|>', '', ai_ret)
             
-            #print("待解析的ai_ret内容：", ai_ret)
             try:
                 result = json.loads(ai_ret)
             except json.JSONDecodeError as e:
                 print(f"解析JSON出错：{e}")
                 # 这里可以根据实际需求决定后续处理，比如返回默认值、记录日志等
                 result = None
-            
+
             result = json.loads(ai_ret)
             result["link"] = {"link": link, "text": link}
+            result["date"] = date_str
             results.append(result)
 
     #处理pdf文件上传（一般用于处理单个pdf上传的特例）
     if pdf_content:
         # 构造评分标准
-        messages = get_rating_prompt(sop_content, tag_content, pdf_content, is_pdf = True)
+        messages = get_rating_prompt(sop_content, tag_content, pdf_content, True)
 
         lark.logger.info(f"messages:{messages}")
         # 调用AI评分
@@ -218,58 +216,35 @@ def save_to_feishu_sheet(spreadsheet_token, sheet_id, range, results: list[list[
 
 
 def main():
-    # 论文链接列表
-    #paper_links = [
-        #"https://arxiv.org/pdf/2506.09033"
-        #"https://arxiv.org/pdf/2506.14245"
-        #"https://arxiv.org/pdf/2409.09214"
-        #"https://arxiv.org/pdf/2504.11346"
-        #"https://arxiv.org/pdf/2502.14282",
-        #"https://arxiv.org/pdf/2501.00663",
-    #]
-
-
-    #paper_links = [
-    #"https://arxiv.org/pdf/2506.15461"
-    #"https://arxiv.org/pdf/2506.14866"
-    #"https://arxiv.org/pdf/2506.15455"
-    #"https://arxiv.org/pdf/2506.09049"
-    #"https://arxiv.org/pdf/2506.16406"
-    #"https://arxiv.org/pdf/2506.15925"
-    #"https://arxiv.org/pdf/2506.16054"
-    #"https://arxiv.org/pdf/2506.17201"
-    #"https://arxiv.org/pdf/2506.09033"
-    #"https://arxiv.org/pdf/2506.14245"
-    #"https://arxiv.org/pdf/2501.00663"
-    #"https://arxiv.org/pdf/2502.14282"
-    #"https://arxiv.org/pdf/2505.03335"
-    #]
-
-    #paper_links = get_huggingface_daily_papers_arxiv_links()
-
-    #paper_content = extract_pdf_content("file:///C:/Users/Admin/Desktop/papers/nature14539.pdf")
-
-    #paper_links = get_arxiv_paper_links()[0:2]
-
-
-
 
     # 获取评分标准
     access_token = get_access_token(APP_ID, APP_SECRET)["access_token"]
     sop_content = get_feishu_doc_content(RATING_SOP_DOC_TOKEN, access_token)
     tag_content = get_feishu_doc_content(JOB_TAG_DOC_TOKEN, access_token)
 
-    paper_links = get_feishu_sheet_content(SHEET_TOKEN,SHEET_ID,READ_RANGE,access_token)
-    paper_links = [",".join(map(str, row)) for row in paper_links]
+    # 论文链接列表爬取
+    # arxiv的爬取
+    #paper_links, date = get_arxiv_paper_links()
+
+    #hugging dace的爬取
+    paper_links, date = get_huggingface_daily_papers_arxiv_links()
+    paper_links = paper_links[:2]
+    
+    #paper_links = paper_links[:3]
+
+    # 单独提交的论文内容
+    #paper_content = extract_pdf_content("file:///C:/Users/Admin/Desktop/papers/nature14539.pdf")
+
+    
 
     # 对论文进行评分
-    results = rate_papers(sop_content, tag_content, paper_links = paper_links)
+    results = rate_papers(sop_content, tag_content, date, paper_links = paper_links)
     with open("results.json", "w", encoding='utf-8', errors='ignore') as f:
         json.dump(results, f, indent=4, ensure_ascii=False)
 
     # 保存结果到飞书
-    #save_to_feishu_duowei(results)
-    save_to_feishu_sheet(SHEET_TOKEN,SHEET_ID,WRITE_RANGE,results)
+    save_to_feishu_duowei(results)
+    #save_to_feishu_sheet(SHEET_TOKEN,SHEET_ID,WRITE_RANGE,results)
 
 
 if __name__ == "__main__":

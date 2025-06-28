@@ -106,7 +106,7 @@ def get_feishu_doc_content(doc_token: str, access_token: str) -> str:
     return response.data.content
 
 
-def get_rating_prompt(sop_content: str, tag_content: str, paper_content: str, is_pdf: bool) -> list:
+def get_rating_prompt(sop_content: str, tag_content: str, paper_content: str,  is_pdf: bool) -> list:
     """获取评论文本
 
     Args:
@@ -121,7 +121,8 @@ def get_rating_prompt(sop_content: str, tag_content: str, paper_content: str, is
     你是一个专业的评阅人，根据用户给定的论文链接，以 json 格式返回你的评分和总结。
     你同时还是一个人才分析专家，根据用户给定的论文链接，依照岗位tag文档，判定论文作者符合哪两个岗位描述，以json格式返回适合的岗位tag以及对应负责人。
     同样的，还请你先判断以下论文作者中是否有华人，并以json格式返回“是”或“否”。
-    json score: int, summary: str, tag_primary: str, contact_tag_primary: str, tag_secondary: str, contact_tag_secondary, 是否有华人: str
+    json: score: int, summary: str, tag_primary: str, contact_tag_primary: str, tag_secondary: str, contact_tag_secondary, 是否有华人: str
+    (输出时请不要改动date的输出)
     论文评阅 SOP 如下： {sop_content}
     岗位tag文档如下: {tag_content}"""
 
@@ -288,7 +289,7 @@ def clean_link(link):
         link = re.sub(r'\?.*$', '', link)
         return link
 
-def get_huggingface_daily_papers_arxiv_links(date_str=None) -> list[str]:
+def get_huggingface_daily_papers_arxiv_links(date_str=None) -> tuple[list[str], str]:
     """
     从Hugging Face Daily Papers获取arXiv链接，自动去重并返回列表
     
@@ -297,6 +298,7 @@ def get_huggingface_daily_papers_arxiv_links(date_str=None) -> list[str]:
     
     Returns:
         list: 去重后的arXiv链接列表
+        str: 论文对应的发表日期
     """
     # 计算日期（默认为上一个工作日）
     if not date_str:
@@ -341,7 +343,7 @@ def get_huggingface_daily_papers_arxiv_links(date_str=None) -> list[str]:
         unique_links.sort()  # 排序方便查看
     
         print(f"成功获取{len(unique_links)}个唯一arXiv链接")
-        return unique_links
+        return unique_links, date_str
         
     except requests.exceptions.RequestException as e:
         print(f"请求出错: {e}")
@@ -358,14 +360,15 @@ def get_huggingface_daily_papers_arxiv_links(date_str=None) -> list[str]:
 
 
 
-def get_arxiv_paper_links(date_str: str = None) -> list[str]:
+def get_arxiv_paper_links(date_str: str = None) -> tuple[list[str], str]:
     """
     爬取指定日期 arXiv 上 AI 领域的所有论文 PDF 链接
     
     Args:
         str: 指定日期，默认上一个工作日
     Returns:
-        list: 去重后的pdf links
+        list[str]: 去重后的pdf links
+        str: 论文对应的提交日期
     """
     
     # 计算日期（默认为上一个工作日）
@@ -409,4 +412,4 @@ def get_arxiv_paper_links(date_str: str = None) -> list[str]:
     pdf_links = [clean_link(link) for link in pdf_links]
     print(f"成功获取{len(pdf_links)}个唯一arXiv链接")
 
-    return pdf_links
+    return pdf_links, date_str
