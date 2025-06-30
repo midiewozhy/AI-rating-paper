@@ -5,8 +5,10 @@ from typing import Any, Dict, List
 from urllib.parse import urlparse, unquote
 
 import constants
+import utils
 
 reload(constants)
+reload(utils)
 import json
 import os
 import re
@@ -224,13 +226,12 @@ def main():
 
     # 论文链接列表爬取
     # arxiv的爬取
-    #paper_links, date = get_arxiv_paper_links()
+    paper_links, date = get_arxiv_paper_links()
+    paper_links = paper_links[0:2]
 
     #hugging dace的爬取
-    paper_links, date = get_huggingface_daily_papers_arxiv_links()
-    paper_links = paper_links[:2]
-    
-    #paper_links = paper_links[:3]
+    #paper_links, date = get_huggingface_daily_papers_arxiv_links()
+    #paper_links = paper_links[:2]
 
     # 单独提交的论文内容
     #paper_content = extract_pdf_content("file:///C:/Users/Admin/Desktop/papers/nature14539.pdf")
