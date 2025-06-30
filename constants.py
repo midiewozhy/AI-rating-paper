@@ -16,5 +16,5 @@ TEST_VIEW_ID = "vewckRlD5j"
 #电子表格的
 SHEET_TOKEN = "SCmtscuAch23u5tHfYLc9BxtnId"
 SHEET_ID = "d40f7b"
-READ_RANGE = "A1:A3"
-WRITE_RANGE = "B1:H3"
+#READ_RANGE = "A1:A3"
+#WRITE_RANGE = "B1:H3"
