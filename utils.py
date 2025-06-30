@@ -122,7 +122,6 @@ def get_rating_prompt(sop_content: str, tag_content: str, paper_content: str,  i
     你同时还是一个人才分析专家，根据用户给定的论文链接，依照岗位tag文档，判定论文作者符合哪两个岗位描述，以json格式返回适合的岗位tag以及对应负责人。
     同样的，还请你先判断以下论文作者中是否有华人，并以json格式返回“是”或“否”。
     json: score: int, summary: str, tag_primary: str, contact_tag_primary: str, tag_secondary: str, contact_tag_secondary, 是否有华人: str
-    (输出时请不要改动date的输出)
     论文评阅 SOP 如下： {sop_content}
     岗位tag文档如下: {tag_content}"""
 
