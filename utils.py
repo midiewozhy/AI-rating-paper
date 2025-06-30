@@ -380,18 +380,18 @@ def get_arxiv_paper_links(date_str: str = None) -> tuple[list[str], str]:
             if last_working_day.weekday() < 5:  # 0-4是工作日
                 break
             offset += 1
-        date_str = last_working_day.strftime("%Y%m%d")
+        date_str = last_working_day.strftime("%Y-%m-%d")
         next_date = last_working_day + timedelta(days = 1)
         next_date_str = next_date.strftime("%Y%m%d")
     else:
-        date_obj = datetime.strptime(date_str, "%Y%m%d").date()
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
         next_date = date_obj + timedelta(days=1)
         next_date_str = next_date.strftime("%Y%m%d")
     
     # 构建查询
     query = (
         "cat:cs.AI "
-        f"AND submittedDate:[{date_str}0000 TO {next_date_str}0000]"
+        f"AND submittedDate:[{date_str.replace('-','')}0000 TO {next_date_str}0000]"
     )
     
     # 执行查询
