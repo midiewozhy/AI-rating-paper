@@ -123,6 +123,10 @@ def rate_papers(sop_content: str, tag_content: str, date_str: str, paper_links: 
             completion = client.chat.completions.create(
                 model=BOT_ID,
                 messages=messages,
+                #以下参数调整的目的是使得打分的波动性低一点
+                temperature=0, 
+                top_p=0.9,
+                seed=42
             )
 
             # 解析评分结果
@@ -176,7 +180,7 @@ def process_source(results, sop_content, tag_content, table_id, source_name):
     """处理单个数据源的通用函数"""
     if results and results[0]:
         links, date = results
-        links = links[0:2]  # 只处理前2篇
+        links = links[0:1]  # 切片的目的只是用来测试，后期需要删除再投入实际使用
         analysis = rate_papers(sop_content, tag_content, date, paper_links=links)
         save_to_feishu_duowei(analysis, table_id)
         # 保存到本地文件
@@ -257,27 +261,27 @@ def main():
         except Exception as e:
             print(f"爬取Hugging Face论文链接时出错: {e}")
 
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-        # 提交arXiv处理任务
-        arxiv_future = executor.submit(
-            process_source, 
-            arxiv_results, 
-            sop_content, 
-            tag_content,
-            ARXIV_TABLE_ID,
-            "arxiv"
-        )
-        
-        # 提交Hugging Face处理任务
-        hf_future = executor.submit(
-            process_source, 
-            hf_results, 
-            sop_content, 
-            tag_content,
-            HUGGING_FACE_TABLE_ID,
-            "hf"
-        )
+    for i in range(3):
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            # 提交arXiv处理任务
+            arxiv_future = executor.submit(
+                process_source, 
+                arxiv_results, 
+                sop_content, 
+                tag_content,
+                ARXIV_TABLE_ID,
+                "arxiv"
+            )
+            
+            # 提交Hugging Face处理任务
+            hf_future = executor.submit(
+                process_source, 
+                hf_results, 
+                sop_content, 
+                tag_content,
+                HUGGING_FACE_TABLE_ID,
+                "hf"
+            )
 
 
 
