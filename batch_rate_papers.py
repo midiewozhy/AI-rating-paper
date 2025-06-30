@@ -261,28 +261,26 @@ def main():
         except Exception as e:
             print(f"爬取Hugging Face论文链接时出错: {e}")
 
-    for i in range(3):
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-            # 提交arXiv处理任务
-            arxiv_future = executor.submit(
-                process_source, 
-                arxiv_results, 
-                sop_content, 
-                tag_content,
-                ARXIV_TABLE_ID,
-                "arxiv"
-            )
-            
-            # 提交Hugging Face处理任务
-            hf_future = executor.submit(
-                process_source, 
-                hf_results, 
-                sop_content, 
-                tag_content,
-                HUGGING_FACE_TABLE_ID,
-                "hf"
-            )
-
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+    # 提交arXiv处理任务
+        arxiv_future = executor.submit(
+            process_source, 
+            arxiv_results, 
+            sop_content, 
+            tag_content,
+            ARXIV_TABLE_ID,
+            "arxiv"
+        )
+        
+        # 提交Hugging Face处理任务
+        hf_future = executor.submit(
+            process_source, 
+            hf_results, 
+            sop_content, 
+            tag_content,
+            HUGGING_FACE_TABLE_ID,
+            "hf"
+        )
 
 
 if __name__ == "__main__":
