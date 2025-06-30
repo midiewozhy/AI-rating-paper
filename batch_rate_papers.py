@@ -1,3 +1,4 @@
+import concurrent.futures
 import PyPDF2
 import json
 from importlib import reload
@@ -26,11 +27,10 @@ from constants import (
     RATING_SOP_DOC_TOKEN,
     JOB_TAG_DOC_TOKEN,
     TABLE_APP_TOKEN,
-    TABLE_ID,
+    HUGGING_FACE_TABLE_ID,
+    ARXIV_TABLE_ID,
     SHEET_TOKEN,
     SHEET_ID,
-    READ_RANGE,
-    WRITE_RANGE,
 )
 from utils import (
     add_records_to_dowei,
@@ -171,18 +171,33 @@ def rate_papers(sop_content: str, tag_content: str, date_str: str, paper_links: 
 
     return results
 
+#通用的处理数据并让大模型生成分析的函数
+def process_source(results, sop_content, tag_content, table_id, source_name):
+    """处理单个数据源的通用函数"""
+    if results and results[0]:
+        links, date = results
+        links = links[0:2]  # 只处理前2篇
+        analysis = rate_papers(sop_content, tag_content, date, paper_links=links)
+        save_to_feishu_duowei(analysis, table_id)
+        # 保存到本地文件
+        with open(f"{source_name}_results.json", "w", encoding='utf-8', errors='ignore') as f:
+            json.dump(analysis, f, indent=4, ensure_ascii=False)
+        return analysis
+    return None
 
-def save_to_feishu_duowei(results: List[Dict[str, Any]]) -> None:
+
+def save_to_feishu_duowei(results: List[Dict[str, Any]], table_id: str) -> None:
     """将评分结果保存到飞书多维表格
 
     Args:
         results (List[Dict[str, Any]]): 评分结果列表
+        table_id (str): 用来存储对应数据的table_id，不同数据存储地址不一样
     """
     # 获取访问令牌
     user_access_token = get_access_token(APP_ID, APP_SECRET)["access_token"]
 
     # 将结果保存到飞书多维表格
-    add_records_to_dowei(TABLE_APP_TOKEN, TABLE_ID, user_access_token, results)
+    add_records_to_dowei(TABLE_APP_TOKEN, table_id, user_access_token, results)
 
 def save_to_feishu_sheet(spreadsheet_token, sheet_id, range, results: list[list[any]]) -> None:
     """将所需要的结果保存到飞书电子表格
@@ -224,28 +239,46 @@ def main():
     sop_content = get_feishu_doc_content(RATING_SOP_DOC_TOKEN, access_token)
     tag_content = get_feishu_doc_content(JOB_TAG_DOC_TOKEN, access_token)
 
-    # 论文链接列表爬取
-    # arxiv的爬取
-    paper_links, date = get_arxiv_paper_links()
-    paper_links = paper_links[0:2]
-
-    #hugging dace的爬取
-    #paper_links, date = get_huggingface_daily_papers_arxiv_links()
-    #paper_links = paper_links[:2]
-
-    # 单独提交的论文内容
-    #paper_content = extract_pdf_content("file:///C:/Users/Admin/Desktop/papers/nature14539.pdf")
-
+    # 并行爬取论文链接
+    arxiv_results = None
+    hf_results = None
     
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        arxiv_future = executor.submit(get_arxiv_paper_links)
+        hf_future = executor.submit(get_huggingface_daily_papers_arxiv_links)
+        
+        try:
+            arxiv_results = arxiv_future.result(timeout=300)  # 设置超时时间为5分钟
+        except Exception as e:
+            print(f"爬取Arxiv论文链接时出错: {e}")
+        
+        try:
+            hf_results = hf_future.result(timeout=300)  # 设置超时时间为5分钟
+        except Exception as e:
+            print(f"爬取Hugging Face论文链接时出错: {e}")
 
-    # 对论文进行评分
-    results = rate_papers(sop_content, tag_content, date, paper_links = paper_links)
-    with open("results.json", "w", encoding='utf-8', errors='ignore') as f:
-        json.dump(results, f, indent=4, ensure_ascii=False)
 
-    # 保存结果到飞书
-    save_to_feishu_duowei(results)
-    #save_to_feishu_sheet(SHEET_TOKEN,SHEET_ID,WRITE_RANGE,results)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        # 提交arXiv处理任务
+        arxiv_future = executor.submit(
+            process_source, 
+            arxiv_results, 
+            sop_content, 
+            tag_content,
+            ARXIV_TABLE_ID,
+            "arxiv"
+        )
+        
+        # 提交Hugging Face处理任务
+        hf_future = executor.submit(
+            process_source, 
+            hf_results, 
+            sop_content, 
+            tag_content,
+            HUGGING_FACE_TABLE_ID,
+            "hf"
+        )
+
 
 
 if __name__ == "__main__":
