@@ -123,10 +123,11 @@ def rate_papers(sop_content: str, tag_content: str, date_str: str, paper_links: 
             completion = client.chat.completions.create(
                 model=BOT_ID,
                 messages=messages,
-                #以下参数调整的目的是使得打分的波动性低一点
+                # 以下参数调整的目的是使得打分的波动性低一点
                 temperature=0, 
-                top_p=0.9,
-                seed=42
+                top_p=0.9, # 在temperature = 0的情况下该参数无效
+                seed=42, # 固定随机种子
+                #max_tokens=150,
             )
 
             # 解析评分结果
