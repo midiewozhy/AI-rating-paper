@@ -1,6 +1,6 @@
 import json
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import lark_oapi as lark
 import requests
@@ -361,10 +361,11 @@ def get_huggingface_daily_papers_arxiv_links(date_str=None) -> tuple[list[str], 
 
 def get_arxiv_paper_links(date_str: str = None) -> tuple[list[str], str]:
     """
-    爬取指定日期 arXiv 上 AI 领域的所有论文 PDF 链接
+    爬取UTC时区前一个工作日 arXiv 上 AI 领域的所有论文 PDF 链接
     
     Args:
-        str: 指定日期，默认上一个工作日
+        date_str (str, optional): 指定日期(YYYY-MM-DD)，默认为上一个工作日
+
     Returns:
         list[str]: 去重后的pdf links
         str: 论文对应的提交日期
@@ -372,7 +373,7 @@ def get_arxiv_paper_links(date_str: str = None) -> tuple[list[str], str]:
     
     # 计算日期（默认为上一个工作日）
     if not date_str:
-        today = datetime.today()
+        today = datetime.now()
         offset = 1
         while True:
             last_working_day = today - timedelta(days=offset)
@@ -383,9 +384,9 @@ def get_arxiv_paper_links(date_str: str = None) -> tuple[list[str], str]:
         next_date = last_working_day + timedelta(days = 1)
         next_date_str = next_date.strftime("%Y%m%d")
     else:
-        date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+        date_obj = datetime.strptime(date_str,"%Y-%m-%d")
         next_date = date_obj + timedelta(days=1)
-        next_date_str = next_date.strftime("%Y%m%d")
+        next_date_str = next_date.strftime("%Y%m%d")        
     
     # 构建查询
     query = (
@@ -409,6 +410,6 @@ def get_arxiv_paper_links(date_str: str = None) -> tuple[list[str], str]:
     
     #清理PDF链接
     pdf_links = [clean_link(link) for link in pdf_links]
-    print(f"成功获取{len(pdf_links)}个唯一arXiv链接")
+    print(f"成功获取UTC时间{date_str}的{len(pdf_links)}个唯一arXiv链接")
 
     return pdf_links, date_str
