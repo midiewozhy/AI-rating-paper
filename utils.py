@@ -386,7 +386,7 @@ def get_huggingface_daily_papers_arxiv_links(date_str=None) -> tuple[list[str], 
                 parts = href.split('/')
                 arxiv_id = next((p for p in parts if re.match(r'\d+\.\d+', p)), None)
                 if arxiv_id:
-                    arxiv_links.append(f"https://arxiv.org/abs/{arxiv_id}")
+                    arxiv_links.append(f"https://arxiv.org/pdf/{arxiv_id}")
         
         cleaned_links = [clean_link(link) for link in arxiv_links]
         
