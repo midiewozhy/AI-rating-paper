@@ -106,7 +106,7 @@ def get_feishu_doc_content(doc_token: str, access_token: str) -> str:
     return response.data.content
 
 
-def get_rating_prompt(sop_content: str, tag_content: str, paper_content: str,  is_pdf: bool) -> list:
+def get_rating_prompt(sop_content: str, tag_content: str, paper_content: str,  is_pdf: bool, relevance_content: str = None) -> list:
     """获取评论文本
 
     Args:
@@ -117,13 +117,66 @@ def get_rating_prompt(sop_content: str, tag_content: str, paper_content: str,  i
         str: 评论文本
     """
 
-    system_prompt = f"""
-    你是一个专业的评阅人，根据用户给定的论文链接，以 json 格式返回你的评分和总结。
-    你同时还是一个人才分析专家，根据用户给定的论文链接，依照岗位tag文档，判定论文作者符合哪两个岗位描述，以json格式返回适合的岗位tag以及对应负责人。
-    同样的，还请你先判断以下论文作者中是否有华人，并以json格式返回“是”或“否”。
+    """system_prompt = f
+    你是一个专业的评阅人，根据用户给定的论文链接，请先结合相关性文档判断该论文研究方向与我们的业务相关性是否高度重合。
+    若高度重合则对论文进行总结，并结合论文评阅sop，为该论文打一个分；若重合度低则在输出的summary部分写'与公司业务无相同点'，同时不需要对该论文做其他工作。
+    同时，你还是一个人才分析专家，对于与业务高度重合的论文，你结合岗位tag文档，判定论文作者符合哪两个岗位描述，并以json格式按相关性由高到低的顺序输出对应的岗位tag以及对应的负责人。
+    同样的，还请你先判断以下论文作者中是否有华人，并以json格式返回“是”或“否”。请按照json的格式输出内容，输出示例如下：
     json: score: int, summary: str, tag_primary: str, contact_tag_primary: str, tag_secondary: str, contact_tag_secondary, 是否有华人: str
+    相关性文档如下：{relevance_content}
     论文评阅 SOP 如下： {sop_content}
-    岗位tag文档如下: {tag_content}"""
+    岗位tag文档如下: {tag_content}
+        
+    1. 相关性判断（关键步骤）：
+    - 依据相关性文档内容判断论文研究方向与公司业务是否高度重合
+    - {relevance_content}
+    - 结果影响后续步骤：
+    * 若高度重合：继续执行步骤2和3
+    * 若非高度重合：在最终JSON的summary字段填写'与公司业务无相同点'，并跳过步骤2，3和4
+
+    - 非高度重合时：score、tag_primary、contact_tag_primary、tag_secondary、contact_tag_secondary必须为null
+    - 非高度重合时：summary必须且只能为'与公司业务无相同点'
+"""
+
+    #论文评阅 SOP 如下： {sop_content}
+    #岗位tag文档如下: {tag_content}
+
+    system_prompt = f"""
+    你是一个专业的评阅人兼人才分析专家。请根据用户提供的论文链接，结合给定的文档信息，严格按以下逻辑执行任务，并最终输出指定的JSON格式。
+
+    处理逻辑：
+    1. 论文总结与评分：
+    - 对论文进行总结
+    - 依据论文评阅SOP文档为论文打整数分数
+    - {sop_content}
+
+    2. 人才岗位匹配分析：
+    - 依据岗位tag文档分析作者符合的两个岗位
+    - {tag_content}
+    - 按相关性由高到低排序确定主要和次要岗位
+    - 提取对应的负责人信息
+
+    3. 华人作者判断：
+    - 分析论文作者名单判断是否有华人作者
+    - 依据：作者姓名（常见华人姓氏、拼音）、所属机构（中国大陆/港澳台/新加坡等）
+
+    输出要求：
+    - 仅输出一个JSON对象，格式如下：
+
+    "score": 整数或null,   // 整数分数
+    "summary": 字符串,     // 论文总结
+    "tag_primary": 字符串或null,  // 主要岗位Tag
+    "contact_tag_primary": 字符串或null,  // 主要岗位负责人
+    "tag_secondary": 字符串或null,  // 次要岗位Tag
+    "contact_tag_secondary": 字符串或null,  // 次要岗位负责人
+    "是否有华人": "是"或"否"  // 华人判断结果
+
+    关键规则：
+    - 所有判断必须严格基于两个文档内容
+    - 是否有华人字段必须为"是"或"否"
+    """
+
+    #，否则固定为'与公司业务无相同点'
 
     if is_pdf:
         return [
@@ -361,7 +414,7 @@ def get_huggingface_daily_papers_arxiv_links(date_str=None) -> tuple[list[str], 
 
 def get_arxiv_paper_links(date_str: str = None) -> tuple[list[str], str]:
     """
-    爬取UTC时区前一个工作日 arXiv 上 AI 领域的所有论文 PDF 链接
+    爬取前一个工作日 arXiv 上 AI 领域的所有论文 PDF 链接
     
     Args:
         date_str (str, optional): 指定日期(YYYY-MM-DD)，默认为上一个工作日
@@ -410,6 +463,6 @@ def get_arxiv_paper_links(date_str: str = None) -> tuple[list[str], str]:
     
     #清理PDF链接
     pdf_links = [clean_link(link) for link in pdf_links]
-    print(f"成功获取UTC时间{date_str}的{len(pdf_links)}个唯一arXiv链接")
+    print(f"成功获取{date_str}的{len(pdf_links)}个唯一arXiv链接")
 
     return pdf_links, date_str
