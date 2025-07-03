@@ -350,8 +350,10 @@ def main():
         # 等待所有任务完成
         print(f"等待{len(futures)}个任务块处理完成...")
         concurrent.futures.wait(futures)
-        save_to_feishu_duowei(dict(),ARXIV_TABLE_ID)
-        save_to_feishu_duowei(dict(),HUGGING_FACE_TABLE_ID)
+
+        # 添加空白记录以区分时间
+        save_to_feishu_duowei([dict()],ARXIV_TABLE_ID)
+        save_to_feishu_duowei([dict()],HUGGING_FACE_TABLE_ID)
         print("所有论文处理任务完成")
     
     print("论文处理流程完成")    
