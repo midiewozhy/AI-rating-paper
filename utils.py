@@ -444,7 +444,7 @@ def get_arxiv_paper_links(date_str: str = None) -> tuple[list[str], str]:
     # 构建查询
     query = (
         "cat:cs.AI "
-        f"AND submittedDate:[{date_str.replace('-','')}000000 TO {next_date_str}000000]"
+        f"AND submittedDate:[{date_str.replace('-','')} TO {next_date_str}]"
     )
     
     # 执行查询
