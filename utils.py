@@ -414,7 +414,7 @@ def get_huggingface_daily_papers_arxiv_links(date_str=None) -> tuple[list[str], 
 
 def get_arxiv_paper_links(date_str: str = None) -> tuple[list[str], str]:
     """
-    爬取前一个工作日 arXiv 上 AI 领域的所有论文 PDF 链接
+    爬取前一个工作日到该工作日（不包括该工作日）或者指定日期 arXiv 上 AI 领域的所有论文 PDF 链接
     
     Args:
         date_str (str, optional): 指定日期(YYYY-MM-DD)，默认为上一个工作日
@@ -434,7 +434,7 @@ def get_arxiv_paper_links(date_str: str = None) -> tuple[list[str], str]:
                 break
             offset += 1
         date_str = last_working_day.strftime("%Y-%m-%d")
-        next_date = last_working_day + timedelta(days = 1)
+        next_date = today
         next_date_str = next_date.strftime("%Y%m%d")
     else:
         date_obj = datetime.strptime(date_str,"%Y-%m-%d")
