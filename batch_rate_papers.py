@@ -195,7 +195,7 @@ def process_source(results, date, sop_content, tag_content, table_id, source_nam
     """处理单个数据源的通用函数"""
     if results:
         date = date
-        #links = links[0:5]  # 切片的目的只是用来测试，后期需要删除再投入实际使用
+        #results = results[0:3]  # 切片的目的只是用来测试，后期需要删除再投入实际使用
         analysis = rate_papers(sop_content, tag_content, date, paper_links=results)
         save_to_feishu_duowei(analysis, table_id)
         # 保存到本地文件
@@ -350,6 +350,8 @@ def main():
         # 等待所有任务完成
         print(f"等待{len(futures)}个任务块处理完成...")
         concurrent.futures.wait(futures)
+        save_to_feishu_duowei(dict(),ARXIV_TABLE_ID)
+        save_to_feishu_duowei(dict(),HUGGING_FACE_TABLE_ID)
         print("所有论文处理任务完成")
     
     print("论文处理流程完成")    
