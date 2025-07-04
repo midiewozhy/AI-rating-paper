@@ -414,55 +414,45 @@ def get_huggingface_daily_papers_arxiv_links(date_str=None) -> tuple[list[str], 
 
 def get_arxiv_paper_links(date_str: str = None) -> tuple[list[str], str]:
     """
-    爬取前一个工作日到该工作日（不包括该工作日）或者指定日期 arXiv 上 AI 领域的所有论文 PDF 链接
-    
-    Args:
-        date_str (str, optional): 指定日期(YYYY-MM-DD)，默认为上一个工作日
+    爬取前一个公布周期arXiv上AI领域的所有论文PDF链接
 
     Returns:
         list[str]: 去重后的pdf links
-        str: 论文对应的提交日期
+        str: 论文对应的提交周期
     """
     
-    # 计算日期（默认为上一个工作日）
-    if not date_str:
-        today = datetime.now()
-        offset = 1
-        while True:
-            last_working_day = today - timedelta(days=offset)
-            if last_working_day.weekday() < 5:  # 0-4是工作日
-                break
-            offset += 1
-        date_str = last_working_day.strftime("%Y-%m-%d")
-        next_date = today
-        next_date_str = next_date.strftime("%Y%m%d")
+    #计算日期
+    today = datetime.today()
+    if today.weekday() in (0,1):
+        start_date = today - timedelta(days = 4) # 周一从上周四开始爬，周二从上周五开始爬
     else:
-        date_obj = datetime.strptime(date_str,"%Y-%m-%d")
-        next_date = date_obj + timedelta(days=1)
-        next_date_str = next_date.strftime("%Y%m%d")        
-    
-    # 构建查询
-    query = (
-        "cat:cs.AI "
-        f"AND submittedDate:[{date_str.replace('-','')} TO {next_date_str}]"
-    )
+        start_date = today - timedelta(days = 2) # 周三/四/五都从当天的前天开始爬
+    if today.weekday() == 0:
+        end_date = today - timedelta(days = 3) # 周一爬到上周五
+    else:
+        end_date = today - timedelta(days = 1) # 其他都爬到前一天
+
+    # 转换成字符串
+    start_date_str = start_date.strftime("%Y%m%d")
+    end_date_str = end_date.strftime("%Y%m%d")
+    period_str = f"EDT {start_date_str} 14:00到{end_date_str} 14:00"
+
+    # 构建query
+    query = f'cat:cs.AI AND submittedDate:[{start_date_str}1400 TO {end_date_str}1400]'
     
     # 执行查询
     search = arxiv.Search(
         query=query,
-        max_results=10000,  # 假设一天最多10000篇论文，可根据需要调整
+        max_results=10000,
         sort_by=arxiv.SortCriterion.SubmittedDate,
         sort_order=arxiv.SortOrder.Descending
     )
     
-    # 创建client
+    # 提取并返回PDF链接
     client = arxiv.Client()
-
-    # 提取并返回 PDF 链接
     pdf_links = [result.pdf_url for result in client.results(search)]
-    
-    #清理PDF链接
     pdf_links = [clean_link(link) for link in pdf_links]
-    print(f"成功获取{date_str}的{len(pdf_links)}个唯一arXiv链接")
 
-    return pdf_links, date_str
+
+    print(f"成功获取{period_str}的{len(pdf_links)}个唯一arXiv链接")
+    return pdf_links, period_str
