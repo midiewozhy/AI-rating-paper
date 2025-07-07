@@ -394,7 +394,7 @@ def get_huggingface_daily_papers_arxiv_links(date_str=None) -> tuple[list[str], 
         unique_links = list(set(cleaned_links))
         unique_links.sort()  # 排序方便查看
     
-        print(f"成功获取{len(unique_links)}个唯一Hugging Face链接")
+        print(f"成功获取{date_str}的{len(unique_links)}个唯一Hugging Face链接")
         return unique_links, date_str
         
     except requests.exceptions.RequestException as e:
