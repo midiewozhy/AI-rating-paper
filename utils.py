@@ -354,7 +354,7 @@ def get_huggingface_daily_papers_arxiv_links(date_str=None):
                     hf_count += 1                
                     yield (f"https://arxiv.org/pdf/{arxiv_id}",1, date_str)
         
-        lark.logger.info(f"成功爬取到{date_str}的{hf_count}条链接")
+        lark.logger.info(f"成功爬取到Hugging Face上{date_str}的{hf_count}条链接")
 
     except requests.exceptions.RequestException as e:
         lark.logger.error(f"请求出错: {e}")
@@ -412,7 +412,7 @@ def get_arxiv_paper_links():
             if link not in arxiv_visited and arxiv_visited.add(link) is None:
                 arxiv_count += 1
                 yield (link, 0, period_str)
-        lark.logger.info(f"成功爬取到{period_str}的{arxiv_count}条链接")        
+        lark.logger.info(f"成功爬取到ArXiv上{period_str}的{arxiv_count}条链接")        
 
     except Exception as e:
         lark.logger.error(f"爬取arxiv链接时出错: {e}")
