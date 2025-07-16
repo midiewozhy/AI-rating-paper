@@ -52,17 +52,17 @@ def get_access_token(app_id, app_secret):
             }
         else:
             # 打印错误信息
-            print(
+            lark.logger.error(
                 f"获取access_token失败，错误码：{result.get('code')}，错误信息：{result.get('msg')}"
             )
             return None
     except requests.exceptions.RequestException as e:
         # 处理请求异常
-        print(f"请求异常：{e}")
+        lark.logger.error(f"请求异常：{e}")
         return None
     except json.JSONDecodeError as e:
         # 处理响应解析异常
-        print(f"响应解析异常：{e}")
+        lark.logger.error(f"响应解析异常：{e}")
         return None
 
 
@@ -106,40 +106,7 @@ def get_feishu_doc_content(doc_token: str, access_token: str) -> str:
     return response.data.content
 
 
-def get_rating_prompt(sop_content: str, tag_content: str, paper_content: str,  is_pdf: bool, relevance_content: str = None) -> list:
-    """获取评论文本
-
-    Args:
-        sop_content (str): SOP 内容
-        paper_content (str): 论文链接或读取到的pdf内容
-
-    Returns:
-        str: 评论文本
-    """
-
-    """system_prompt = f
-    你是一个专业的评阅人，根据用户给定的论文链接，请先结合相关性文档判断该论文研究方向与我们的业务相关性是否高度重合。
-    若高度重合则对论文进行总结，并结合论文评阅sop，为该论文打一个分；若重合度低则在输出的summary部分写'与公司业务无相同点'，同时不需要对该论文做其他工作。
-    同时，你还是一个人才分析专家，对于与业务高度重合的论文，你结合岗位tag文档，判定论文作者符合哪两个岗位描述，并以json格式按相关性由高到低的顺序输出对应的岗位tag以及对应的负责人。
-    同样的，还请你先判断以下论文作者中是否有华人，并以json格式返回“是”或“否”。请按照json的格式输出内容，输出示例如下：
-    json: score: int, summary: str, tag_primary: str, contact_tag_primary: str, tag_secondary: str, contact_tag_secondary, 是否有华人: str
-    相关性文档如下：{relevance_content}
-    论文评阅 SOP 如下： {sop_content}
-    岗位tag文档如下: {tag_content}
-        
-    1. 相关性判断（关键步骤）：
-    - 依据相关性文档内容判断论文研究方向与公司业务是否高度重合
-    - {relevance_content}
-    - 结果影响后续步骤：
-    * 若高度重合：继续执行步骤2和3
-    * 若非高度重合：在最终JSON的summary字段填写'与公司业务无相同点'，并跳过步骤2，3和4
-
-    - 非高度重合时：score、tag_primary、contact_tag_primary、tag_secondary、contact_tag_secondary必须为null
-    - 非高度重合时：summary必须且只能为'与公司业务无相同点'
-"""
-
-    #论文评阅 SOP 如下： {sop_content}
-    #岗位tag文档如下: {tag_content}
+def get_rating_prompt(sop_content: str, tag_content: str, paper_content: str, relevance_content: str = None) -> list:
 
     system_prompt = f"""
     你是一个专业的评阅人兼人才分析专家。请根据用户提供的论文链接，结合给定的文档信息，严格按以下逻辑执行任务，并最终输出指定的JSON格式。
@@ -177,17 +144,10 @@ def get_rating_prompt(sop_content: str, tag_content: str, paper_content: str,  i
     """
 
     #，否则固定为'与公司业务无相同点'
-
-    if is_pdf:
-        return [
-            {"role": "system", "content": f"{system_prompt}"},
-        {"role": "user", "content": f"论文内容：{paper_content}"},
-        ]
-    else:
-        return [
-            {"role": "system", "content": f"{system_prompt}"},
-            {"role": "user", "content": f"论文链接：{paper_content}"},
-        ]
+    return [
+        {"role": "system", "content": f"{system_prompt}"},
+        {"role": "user", "content": f"论文链接：{paper_content}"},
+    ]
 
 #对于论文作者中没有华人的文章，则不需要依照岗位tag文档进行岗位符合度的判断。
 
@@ -277,10 +237,10 @@ def get_feishu_sheet_content(doc_token: str, sheet_id: str, range: str, access_t
         return values
     
     except requests.exceptions.RequestException as e:
-        print(f"请求出错: {e}")
+        lark.logger.error(f"请求出错: {e}")
         return []
     except (KeyError, ValueError) as e:
-        print(f"解析响应出错: {e}")
+        lark.logger.error(f"解析响应出错: {e}")
         return []
 
 def add_records_to_feishu_sheet(spreadsheet_token, sheet_id, range, user_access_token, results):
@@ -326,10 +286,10 @@ def add_records_to_feishu_sheet(spreadsheet_token, sheet_id, range, user_access_
         return response.json()
     
     except requests.exceptions.RequestException as e:
-        print(f"请求发送失败: {e}")
+        lark.logger.error(f"请求发送失败: {e}")
         return {"error": str(e)}
     except json.JSONDecodeError as e:
-        print(f"响应解析失败: {e}")
+        lark.logger.error(f"响应解析失败: {e}")
         return {"error": f"响应解析失败: {response.text}"}
 
 
@@ -341,7 +301,7 @@ def clean_link(link):
         link = re.sub(r'\?.*$', '', link)
         return link
 
-def get_huggingface_daily_papers_arxiv_links(date_str=None) -> tuple[list[str], str]:
+def get_huggingface_daily_papers_arxiv_links(date_str=None):
     """
     从Hugging Face Daily Papers获取arXiv链接，自动去重并返回列表
     
@@ -352,6 +312,11 @@ def get_huggingface_daily_papers_arxiv_links(date_str=None) -> tuple[list[str], 
         list: 去重后的arXiv链接列表
         str: 论文对应的发表日期
     """
+
+    # 创建一个用来去重的存储器
+    hf_visited = set()
+    hf_count = 0
+
     # 计算日期（默认为上一个工作日）
     if not date_str:
         today = datetime.today()
@@ -364,7 +329,7 @@ def get_huggingface_daily_papers_arxiv_links(date_str=None) -> tuple[list[str], 
         date_str = last_working_day.strftime("%Y-%m-%d")
     
     url = f"https://huggingface.co/papers/date/{date_str}"
-    print(f"正在获取{date_str}的Daily Papers: {url}")
+    lark.logger.info(f"正在获取{date_str}的Daily Papers: {url}")
     
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -379,40 +344,27 @@ def get_huggingface_daily_papers_arxiv_links(date_str=None) -> tuple[list[str], 
         soup = BeautifulSoup(response.text, 'html.parser')
         
         # 提取arXiv链接
-        arxiv_links = []
         for a_tag in soup.find_all('a', href=True):
             href = a_tag.get('href', '')
             if '/papers/' in href:
                 parts = href.split('/')
                 arxiv_id = next((p for p in parts if re.match(r'\d+\.\d+', p)), None)
-                if arxiv_id:
-                    arxiv_links.append(f"https://arxiv.org/pdf/{arxiv_id}")
+                if arxiv_id and clean_link(arxiv_id) not in hf_visited:
+                    hf_visited.add(arxiv_id)    
+                    hf_count += 1                
+                    yield (f"https://arxiv.org/pdf/{arxiv_id}",1, date_str)
         
-        cleaned_links = [clean_link(link) for link in arxiv_links]
-        
-        # 内存去重（去除本次爬取中的重复链接）
-        unique_links = list(set(cleaned_links))
-        unique_links.sort()  # 排序方便查看
-    
-        print(f"成功获取{date_str}的{len(unique_links)}个唯一Hugging Face链接")
-        return unique_links, date_str
-        
+        lark.logger.info(f"成功爬取到{date_str}的{hf_count}条链接")
+
     except requests.exceptions.RequestException as e:
-        print(f"请求出错: {e}")
-        return []
+        lark.logger.error(f"请求出错: {e}")
     except Exception as e:
-        print(f"发生错误: {e}")
-        return []
-
-# 简单测试（可在其他程序中导入时忽略）
-#if __name__ == "__main__":
-#    links = get_huggingface_daily_papers_arxiv_links()
-#    if links:
-#       print(f"前3个链接示例：\n{links}")
+        lark.logger.error(f"发生错误: {e}")
 
 
 
-def get_arxiv_paper_links(date_str: str = None) -> tuple[list[str], str]:
+
+def get_arxiv_paper_links():
     """
     爬取前一个公布周期arXiv上AI领域的所有论文PDF链接
 
@@ -421,6 +373,11 @@ def get_arxiv_paper_links(date_str: str = None) -> tuple[list[str], str]:
         str: 论文对应的提交周期
     """
     
+    # 创建一个用来去重的存储器
+    arxiv_visited = set()
+    # 计数
+    arxiv_count = 0
+
     #计算日期
     today = datetime.today()
     if today.weekday() in (0,1):
@@ -447,12 +404,17 @@ def get_arxiv_paper_links(date_str: str = None) -> tuple[list[str], str]:
         sort_by=arxiv.SortCriterion.SubmittedDate,
         sort_order=arxiv.SortOrder.Descending
     )
-    
-    # 提取并返回PDF链接
-    client = arxiv.Client()
-    pdf_links = [result.pdf_url for result in client.results(search)]
-    pdf_links = [clean_link(link) for link in pdf_links]
 
+    # 生成链接
+    try:
+        for result in arxiv.Client().results(search):
+            link = clean_link(result.pdf_url)
+            if link not in arxiv_visited and arxiv_visited.add(link) is None:
+                arxiv_count += 1
+                yield (link, 0, period_str)
+        lark.logger.info(f"成功爬取到{period_str}的{arxiv_count}条链接")        
 
-    print(f"成功获取{period_str}的{len(pdf_links)}个唯一arXiv链接")
-    return pdf_links, period_str
+    except Exception as e:
+        lark.logger.error(f"爬取arxiv链接时出错: {e}")
+        raise
+
