@@ -131,7 +131,7 @@ def get_rating_prompt(sop_content: str, tag_content: str, paper_content: str, re
     - 仅输出一个JSON对象，格式如下：
 
     "score": 整数或null,   // 整数分数
-    "summary": 字符串,     // 论文总结
+    "summary": 字符串,     // 论文总结，同时分析论文的优缺点，以及简短给出你打分的原因以及你认为作者符合你给出的岗位的原因
     "tag_primary": 字符串或null,  // 主要岗位Tag
     "contact_tag_primary": 字符串或null,  // 主要岗位负责人
     "tag_secondary": 字符串或null,  // 次要岗位Tag
