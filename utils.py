@@ -42,7 +42,7 @@ def get_access_token(app_id, app_secret):
             # 提取app_access_token和过期时间
             access_token = result.get("app_access_token")
             expire = result.get("expire")
-            print(result)
+            lark.logger.info(result)
 
             # 返回包含访问令牌和过期时间的字典
             return {
