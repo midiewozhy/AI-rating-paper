@@ -128,15 +128,18 @@ def get_rating_prompt(sop_content: str, tag_content: str, paper_content: str, re
     - 依据：作者姓名（常见华人姓氏、拼音）、所属机构（中国大陆/港澳台/新加坡等）
 
     输出要求：
-    - 仅输出一个JSON对象，格式如下：
-
-    "score": 整数或null,   // 整数分数
-    "summary": 字符串,     // 论文总结，同时分析论文的优缺点，以及简短给出你打分的原因以及你认为作者符合你给出的岗位的原因
-    "tag_primary": 字符串或null,  // 主要岗位Tag
-    "contact_tag_primary": 字符串或null,  // 主要岗位负责人
-    "tag_secondary": 字符串或null,  // 次要岗位Tag
-    "contact_tag_secondary": 字符串或null,  // 次要岗位负责人
-    "是否有华人": "是"或"否"  // 华人判断结果
+    - 仅输出一个**可直接被JSON解析器解析**的对象，使用```json和```包裹。
+    - 严格遵循以下结构（包括字段顺序、引号、逗号等），示例：
+    ```json
+    {{
+    "score": 67,
+    "summary": "论文提出了RICE方法...（总结需包含优缺点、打分原因、岗位匹配原因，注意转义双引号和换行）",
+    "tag_primary": "多模态交互与世界模型-VLM基础模型",
+    "contact_tag_primary": "林毅、吴侑彬、秦晓波",
+    "tag_secondary": "视觉-视觉模型工程",
+    "contact_tag_secondary": "xuefeng xiao、rui wang",
+    "是否有华人": "是"
+    }}
 
     关键规则：
     - 所有判断必须严格基于两个文档内容
