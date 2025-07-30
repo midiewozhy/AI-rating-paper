@@ -69,7 +69,7 @@ def rate_papers(sop_content: str, tag_content: str, date_str: str, link: str, re
     if link != '':    
         # 构造评分提示
         messages = get_rating_prompt(sop_content, tag_content, link, False)
-        lark.logger.info(f"messages: done")
+        lark.logger.info("prompt constructed")
         # 调用 AI 进行评分
         try: 
             completion = client.chat.completions.create(
