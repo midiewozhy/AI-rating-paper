@@ -92,6 +92,7 @@ def rate_papers(sop_content: str, tag_content: str, date_str: str, link: str, re
             lark.logger.info(f"ai_ret: {ai_ret}")
             ai_ret = re.sub(r'^(<\|FunctionCallEnd\|>|```json\n?|```\n?)', '', ai_ret, flags=re.IGNORECASE)
             ai_ret = re.sub(r'```\s*$', '', ai_ret)  # 移除结尾的代码块标记
+            #ai_ret = re.sub(r"'",'"',ai_ret)
 
             #检查是否为空内容
             if not ai_ret:

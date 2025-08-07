@@ -129,7 +129,7 @@ def get_rating_prompt(sop_content: str, tag_content: str, paper_content: str, re
 
     输出要求：
     - 仅输出一个**可直接被JSON解析器解析**的对象，使用```json和```包裹。
-    - 严格遵循以下结构（包括字段顺序、引号、逗号等），示例：
+    - 严格遵循以下结构（包括字段顺序、双引号、逗号等），示例：
     ```json
     {{
     "score": 67,
@@ -139,11 +139,13 @@ def get_rating_prompt(sop_content: str, tag_content: str, paper_content: str, re
     "tag_secondary": "视觉-视觉模型工程",
     "contact_tag_secondary": "xuefeng xiao、rui wang",
     "是否有华人": "是"
-    }}
+    }}```
 
     关键规则：
     - 所有判断必须严格基于两个文档内容
     - 是否有华人字段必须为"是"或"否"
+    - 注意输出结构中除了分数值以外，其余字段中都需要分别用双引号包裹
+    - 注意输出结构中请不要输出思维过程，只输出一个纯json对象，示例如上
     """
 
     #，否则固定为'与公司业务无相同点'
