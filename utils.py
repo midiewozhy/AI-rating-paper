@@ -109,46 +109,21 @@ def get_feishu_doc_content(doc_token: str, access_token: str) -> str:
 def get_rating_prompt(sop_content: str, tag_content: str, paper_content: str, relevance_content: str = None) -> list:
 
     system_prompt = f"""
-    你是一个专业的评阅人兼人才分析专家。请根据用户提供的论文链接，结合给定的文档信息，严格按以下逻辑执行任务，并最终输出指定的JSON格式。
+    你是一个专业的......严格按以下逻辑执行任务，并最终输出指定的JSON格式。
 
     处理逻辑：
-    1. 论文总结与评分：
-    - 对论文进行总结
-    - 依据论文评阅SOP文档为论文打整数分数
-    - {sop_content}
+    1. 
 
-    2. 人才岗位匹配分析：
-    - 依据岗位tag文档分析作者符合的两个岗位
-    - {tag_content}
-    - 按相关性由高到低排序确定主要和次要岗位
-    - 提取对应的负责人信息
+    2. 
 
-    3. 华人作者判断：
-    - 分析论文作者名单判断是否有华人作者
-    - 依据：作者姓名（常见华人姓氏、拼音）、所属机构（中国大陆/港澳台/新加坡等）
+    3. 
 
     输出要求：
-    - 仅输出一个**可直接被JSON解析器解析**的对象，使用```json和```包裹。
-    - 严格遵循以下结构（包括字段顺序、双引号、逗号等），示例：
-    ```json
-    {{
-    "score": 67,
-    "summary": "论文提出了RICE方法...（总结需包含优缺点、打分原因、岗位匹配原因，注意转义双引号和换行）",
-    "tag_primary": "多模态交互与世界模型-VLM基础模型",
-    "contact_tag_primary": "林毅、吴侑彬、秦晓波",
-    "tag_secondary": "视觉-视觉模型工程",
-    "contact_tag_secondary": "xuefeng xiao、rui wang",
-    "是否有华人": "是"
-    }}```
+    - 
 
     关键规则：
-    - 所有判断必须严格基于两个文档内容
-    - 是否有华人字段必须为"是"或"否"
-    - 注意输出结构中除了分数值以外，其余字段中都需要分别用双引号包裹
-    - 注意输出结构中请不要输出思维过程，只输出一个纯json对象，示例如上
+    - 
     """
-
-    #，否则固定为'与公司业务无相同点'
     return [
         {"role": "system", "content": f"{system_prompt}"},
         {"role": "user", "content": f"论文链接：{paper_content}"},
